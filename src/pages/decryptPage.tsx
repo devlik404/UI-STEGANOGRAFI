@@ -130,6 +130,13 @@ const DecryptPage = () => {
           <>
                <Sidebar />
                <Box p={6} ml={{ base: 0, md: "240px" }}  >
+                       {/* Header */}
+                    <Flex justifyContent="space-between" mb="8">
+                         <Box>
+                              <Heading size="lg" mb="2">Decrypt Page</Heading>
+                         </Box>
+
+                    </Flex>
                     {/* Stepper Custom */}
                     <Box divideY="2px">
                          <Flex gap={4} mb={8} mt={"10"} >

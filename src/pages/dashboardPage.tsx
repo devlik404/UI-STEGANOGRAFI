@@ -2,13 +2,10 @@ import { Box, Flex, Heading, Text, Card, CardBody, Stack, Icon, Progress, Button
 import { FiFile, FiLock, FiUnlock } from "react-icons/fi";
 import { FaRegFileArchive } from "react-icons/fa";
 import Sidebar from "@/components/sidebar";
+import { Link } from "react-router-dom";
 
 const Dashboard = () => {
-     // Dummy data untuk recent files
-     // const recentFiles = [
-     //      { id: 1, name: "document.pdf", type: "Encrypted", date: "2023-10-05" },
-     //      { id: 2, "image.png": "Decrypted", date: "2023-10-04" },
-     // ];
+
 
      return (
           <>
@@ -18,12 +15,8 @@ const Dashboard = () => {
                     <Flex justifyContent="space-between" mb="8">
                          <Box>
                               <Heading size="lg" mb="2">Dashboard</Heading>
-                              <Text color="gray.500">Welcome back, User 👋</Text>
                          </Box>
-                         <Button colorScheme="teal">
-                              <FiLock />
-                              Encrypt Now
-                         </Button>
+
                     </Flex>
 
                     {/* Quick Actions */}
@@ -32,13 +25,19 @@ const Dashboard = () => {
                               <Card.Body>
                                    <Stack>
                                         <Flex align="center" gap="3">
-                                             <Icon as={FiLock} boxSize="6" color="teal.500" />
+                                             <Icon as={FiLock} boxSize="6" color="#3A86FF" />
                                              <Heading size="md">Encrypt File</Heading>
                                         </Flex>
                                         <Text color="gray.500">Secure your files with AES encryption and hide them in images.</Text>
                                         <Button variant="outline" colorScheme="teal">
-                                             <FiFile />
-                                             Choose File
+                                             <Link to="/decrypt" >
+                                                  <Box display={"flex"} gap={2}>
+                                                       <FiFile />
+                                                       <Text>
+                                                            Encrypt File
+                                                       </Text>
+                                                  </Box>
+                                             </Link>
                                         </Button>
                                    </Stack>
                               </Card.Body>
@@ -48,13 +47,19 @@ const Dashboard = () => {
                               <CardBody>
                                    <Stack>
                                         <Flex align="center" gap="3">
-                                             <Icon as={FiUnlock} boxSize="6" color="teal.500" />
+                                             <Icon as={FiUnlock} boxSize="6" color="#3A86FF" />
                                              <Heading size="md">Decrypt File</Heading>
                                         </Flex>
                                         <Text color="gray.500">Extract and decrypt files from steganographic images.</Text>
                                         <Button variant="outline" colorScheme="teal" >
-                                             <FaRegFileArchive />
-                                             Extract File
+                                             <Link to="/encrypt" >
+                                                  <Box display={"flex"} gap={2}>
+                                                       <FaRegFileArchive />
+                                                       <Text>
+                                                            Extract File
+                                                       </Text>
+                                                  </Box>
+                                             </Link>
                                         </Button>
                                    </Stack>
                               </CardBody>
@@ -64,42 +69,8 @@ const Dashboard = () => {
                     {/* Recent Files */}
                     <Card.Root boxShadow="sm" mb="6">
                          <CardBody>
-                              <Heading size="md" mb="4">Recent Files</Heading>
-                              {/* <Table variant="simple">
-            <Thead>
-              <Tr>
-                <Th>Filename</Th>
-                <Th>Type</Th>
-                <Th>Date</Th>
-                <Th>Actions</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {recentFiles.map((file) => (
-                <Tr key={file.id}>
-                  <Td>{file.name}</Td>
-                  <Td>
-                    <Text
-                      color={file.type === "Encrypted" ? "teal.500" : "orange.500"}
-                    >
-                      {file.type}
-                    </Text>
-                  </Td>
-                  <Td>{file.date}</Td>
-                  <Td>
-                    <Button size="sm" variant="ghost" >
-                    <FiDownload />
-                      Download
-                    </Button>
-                    <Button size="sm" variant="ghost" colorScheme="red" >
-                    <FiTrash2 />
-                      Delete
-                    </Button>
-                  </Td>
-                </Tr>
-              ))}
-            </Tbody>
-          </Table> */}
+                              <Heading size="md" mb="4">Total Asset Files</Heading>
+
                          </CardBody>
                     </Card.Root>
 
