@@ -27,7 +27,7 @@ app.whenReady().then(() => {
   createWindow();
 
   // listen dari preload/renderer
-  ipcMain.on("download-file", async (event, url: string) => {
+  ipcMain.on("download-file", async (_, url: string) => {
     const focusedWin = BrowserWindow.getFocusedWindow();
     if (!focusedWin) return;
 
