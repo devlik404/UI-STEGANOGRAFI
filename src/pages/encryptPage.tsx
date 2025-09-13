@@ -1,30 +1,21 @@
 import { Box, Button, Card, CardBody, Flex, Heading, Icon, Input, Stack, Text } from "@chakra-ui/react";
-import { FormEvent, useState } from "react";
-import { useDropzone } from "react-dropzone";
+import { FormEvent, useEffect, useState } from "react";
 import { FiCheckCircle, FiDownload, FiFile, FiImage, FiLock } from "react-icons/fi";
-import { IconType } from "react-icons";
-import { Accept } from 'react-dropzone';
 import Sidebar from "@/components/sidebar";
 import { usePost } from "@/hooks/encrypt";
 import { BsFileEarmarkZipFill } from "react-icons/bs";
+import { CardDropzone } from "@/components/cardDropZone";
+import { toaster } from "@/components/ui/toaster";
 
-
-interface CardDropzoneProps {
-     icon: IconType;
-     title: string;
-     accept?: Accept; // Ganti dari string ke Accept
-     onDrop: (files: File[]) => void;
-     acceptedFiles: string;
-}
 
 const EncryptPage = () => {
      const [selectedFile, setSelectedFile] = useState<File | null>(null);
      const [selectedImage, setSelectedImage] = useState<File | null>(null);
      const [password, setPassword] = useState("");
-     const [showPassword, setShowPassword] = useState(false);
      const [activeStep, setActiveStep] = useState(0);
      const [loading, setLoading] = useState(false);
-     const { handleEncrypt, setContent } = usePost()
+     const { handleEncrypt, res } = usePost()
+     const [isSuccess, setIsSuccess] = useState(false);
 
 
      const steps = [
@@ -62,6 +53,67 @@ const EncryptPage = () => {
           }
      };
 
+     const handleDownload = () => {
+          const imageUrl = res.url;
+          window.electron.downloadFile(imageUrl);
+     };
+     useEffect(() => {
+          const removeDone = window.electron.onDownloadDone((path) => {
+               toaster.create({
+                    title: "Success",
+                    description: "Save File successfully. " + path,
+               });
+          });
+
+          const removeFailed = window.electron.onDownloadFailed((err) => {
+               toaster.create({
+                    title: "Failed",
+                    description: "Download File Failed. " + err,
+               });
+          });
+
+        
+          return () => {
+               removeDone();
+               removeFailed();
+          };
+     }, []);
+
+
+     const handleSubmitEncrypt = async (e: FormEvent) => {
+          e.preventDefault();
+          setLoading(true);
+
+
+          const response = await handleEncrypt(e, {
+               file: selectedFile,
+               image: selectedImage,
+               password: password,
+          });
+
+          setLoading(false);
+
+          if (response?.status === 200) {
+               setIsSuccess(true);
+               setActiveStep(3);
+               toaster.create({
+                    title: "Success",
+                    description: "File encrypted successfully. Download available.",
+               });
+          }
+     };
+
+
+     const handleReset = () => {
+
+          setSelectedFile(null);
+          setSelectedImage(null);
+          setPassword("");
+          setIsSuccess(false);
+          setActiveStep(0);
+     };
+
+     //STEP UI
      const renderStepContent = () => {
           switch (activeStep) {
                case 0:
@@ -93,7 +145,8 @@ const EncryptPage = () => {
                                              <Heading size="md">Set Password</Heading>
                                         </Flex>
                                         <Input
-                                             type={showPassword ? "text" : "password"}
+                                             // type={showPassword ? "text" : "password"}
+                                             type="password"
                                              placeholder="Enter strong password"
                                              value={password}
                                              name="password"
@@ -106,69 +159,45 @@ const EncryptPage = () => {
                     );
                case 3:
                     return (
-                         <Card.Root mt={"4"}>
+                         <Card.Root mt="4">
                               <CardBody>
-                                   <Stack wordSpacing={4}>
-                                        <Flex direction="row" align="center" gap={4}>
-                                             {/* Icon file zip */}
-                                             <Box boxSize={12}>
-                                                  <Icon as={BsFileEarmarkZipFill} boxSize={12} color="blue.600" />
-                                             </Box>
 
-                                             {/* File info */}
-                                             <Stack wordSpacing={1} flex="1">
-                                                  <Text fontWeight="bold" fontSize="sm" >
-                                                       this_file_has_a_long&_dummy_name.zip
-                                                  </Text>
-                                                  <Text fontSize="xs" color="gray.500">
-                                                       by username
-                                                  </Text>
-                                                  <Text fontSize="xs" color="gray.500">
-                                                       29 Feb 2016 &nbsp; 14:45:20
-                                                  </Text>
-                                             </Stack>
+                                   <Flex align="center" gap={4}>
+                                        {/* Icon file zip */}
+                                        <Box boxSize={12}>
+                                             <Icon as={BsFileEarmarkZipFill} boxSize={12} color="blue.600" />
+                                        </Box>
 
-                                             {/* Download icon */}
-                                             <Button
-                                                  variant="ghost"
-                                                  colorScheme="blue"
-                                                  borderRadius="full"
-                                                  p={2}
-                                                  minW="auto"
-                                             >
-                                                  <Icon as={FiDownload} boxSize={6} />
-                                             </Button>
-                                        </Flex>
-                                   </Stack>
+                                        {/* File info */}
+                                        <Stack gap={1} flex="1" minW={0}>
+                                             <Text fontWeight="bold" fontSize="sm" className="truncate">
+                                                  {res.url}
+                                             </Text>
+
+                                        </Stack>
+                                        <Button
+                                             variant="ghost"
+                                             borderRadius="full"
+                                             p={2}
+                                             minW="auto"
+                                             onClick={handleDownload}
+                                        >
+                                             <FiDownload size={20} />
+                                        </Button>
+                                   </Flex>
                               </CardBody>
                          </Card.Root>
+
                     );
                default:
                     return null;
           }
      };
-     const handleSubmitEncrypt = async (e: FormEvent) => {
-          e.preventDefault();
-          setLoading(true);
 
-          // Set data ke hook
-          setContent({
-               file: selectedFile,
-               image: selectedImage,
-               password: password
-          });
-
-          // Tunggu sebentar agar state benar-benar terset (opsional safety)
-          setTimeout(async () => {
-               await handleEncrypt(e);
-               setLoading(false);
-               setActiveStep(3); // lanjut ke download
-          }, 100); // tambahkan delay kecil
-     };
 
      return (
           <>
-               <form onSubmit={handleEncrypt}>
+               <form>
                     <Sidebar />
                     <Box p={6} ml={{ base: 0, md: "240px" }}  >
                          {/* Header */}
@@ -214,42 +243,46 @@ const EncryptPage = () => {
                               <Box>
                                    {/* Konten Utama */}
                                    {renderStepContent()}
-
                                    {/* Navigation Buttons */}
                                    <Flex mt={6} gap={4} justifyContent="flex-end">
-                                        <Button
-                                             variant="outline"
-                                             onClick={handlePrevious}
-                                        //    isDisabled={activeStep === 0}
-                                        >
-                                             Previous
-                                        </Button>
+                                        {!isSuccess ? (
+                                             <>
+                                                  <Button variant="outline" onClick={handlePrevious}>
+                                                       Previous
+                                                  </Button>
 
-                                        <Button
-                                             colorScheme="red"
-                                             onClick={handleSubmitEncrypt}
-                                             loading={loading} // <- perbaiki ini
-                                             disabled={
-                                                  (activeStep === 0 && !selectedFile) ||
-                                                  (activeStep === 1 && !selectedImage)
-                                             }
-                                        >
-                                             Encrypt & Hide
-                                        </Button>
+                                                  <Button
+                                                       colorScheme="red"
+                                                       onClick={handleSubmitEncrypt}
+                                                       loading={loading}
+                                                       disabled={
+                                                            (activeStep === 0 && !selectedFile) ||
+                                                            (activeStep === 1 && !selectedImage) ||
+                                                            (password === null || !password)
+                                                       }
+                                                  >
+                                                       Encrypt & Hide
+                                                  </Button>
 
-                                        <Button
-                                             variant="outline"
-                                             onClick={handleNext}
-                                             disabled={
-                                                  (activeStep === 0 && !selectedFile) ||
-                                                  (activeStep === 1 && !selectedImage) ||
-                                                  (activeStep === 2)
-                                             }
-                                        >
-                                             Next
-                                        </Button>
-
+                                                  <Button
+                                                       variant="outline"
+                                                       onClick={handleNext}
+                                                       disabled={
+                                                            (activeStep === 0 && !selectedFile) ||
+                                                            (activeStep === 1 && !selectedImage) ||
+                                                            activeStep === 2
+                                                       }
+                                                  >
+                                                       Next
+                                                  </Button>
+                                             </>
+                                        ) : (
+                                             <Button colorScheme="blue" onClick={handleReset}>
+                                                  Encrypt Lagi
+                                             </Button>
+                                        )}
                                    </Flex>
+
 
                               </Box>
                          </Box>
@@ -261,57 +294,6 @@ const EncryptPage = () => {
      );
 };
 
-// Komponen Dropzone
-const CardDropzone: React.FC<CardDropzoneProps> = ({
-     icon: IconComponent,
-     title,
-     accept = {}, // Nilai default diubah ke objek kosong
-     onDrop,
-     acceptedFiles
-}) => {
-     const { getRootProps, getInputProps, isDragActive } = useDropzone({
-          onDrop: (files) => onDrop(files),
-          accept: accept, // Gunakan properti accept
-          multiple: false
-     });
 
-     return (
-          <>
-               <Sidebar />
-               <Box p="10">
-                    <Card.Root
-                         borderWidth="2px"
-                         borderRadius="lg"
-                         _hover={{ borderColor: "blue.500" }}
-                         transition="all 0.2s"
-                         bg={isDragActive ? "gray.50" : "white"}
-                         p={"20"}
-                    >
-                         <CardBody textAlign="center" {...getRootProps()}>
-                              <input {...getInputProps()} />
-                              <Box>
-                                   <Icon
-                                        as={IconComponent}
-                                        boxSize={12}
-                                        color="blue.500"
-                                        mb={4}
-                                   />
-                              </Box>
-
-                              <Text fontWeight="bold">{title}</Text>
-                              <Text color="gray.500">
-                                   {isDragActive ? "Release to drop" : "or click to select"}
-                              </Text>
-                              <Text mt={4} fontSize="sm" color="gray.600">
-                                   {acceptedFiles}
-                              </Text>
-                         </CardBody>
-                    </Card.Root>
-               </Box>
-
-          </>
-
-     );
-};
 
 export default EncryptPage;

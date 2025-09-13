@@ -1,74 +1,102 @@
 import { toaster } from "@/components/ui/toaster";
-import { Box, Button, Card, CardBody, Flex, Heading, Icon, Input, Stack, Text } from "@chakra-ui/react";
+import {
+     Box,
+     Button,
+     Card,
+     CardBody,
+     Dialog,
+     Flex,
+     Heading,
+     Icon,
+     Input,
+     Stack,
+     Text,
+} from "@chakra-ui/react";
 import { useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { FiCheckCircle, FiFile, FiImage, FiLock } from "react-icons/fi";
+import { FiCheckCircle, FiImage, FiLock } from "react-icons/fi";
 import { IconType } from "react-icons";
-import { Accept } from 'react-dropzone'; // Import tipe Accept
+import { Accept } from "react-dropzone";
 import Sidebar from "@/components/sidebar";
-
+import { handleDecryptPost } from "@/hooks/handleDecrypt";
 
 interface CardDropzoneProps {
      icon: IconType;
      title: string;
-     accept?: Accept; // Ganti dari string ke Accept
+     accept?: Accept;
      onDrop: (files: File[]) => void;
      acceptedFiles: string;
 }
 
 const DecryptPage = () => {
-     const [selectedFile, setSelectedFile] = useState<File | null>(null);
      const [selectedImage, setSelectedImage] = useState<File | null>(null);
      const [password, setPassword] = useState("");
      const [showPassword, setShowPassword] = useState(false);
      const [activeStep, setActiveStep] = useState(0);
      const [loading, setLoading] = useState(false);
 
-     const steps = [
-          { id: 1, title: 'Upload File', description: 'Select the file to encrypt' },
-          { id: 3, title: 'Set Password', description: 'Secure your encryption' },
-     ];
+     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+     const [openPreview, setOpenPreview] = useState(false);
 
-     const handleFileDrop = (acceptedFiles: File[]) => {
-          setSelectedFile(acceptedFiles[0]);
-          setActiveStep(1);
-     };
+     const { handleRequestDecrypt } = handleDecryptPost();
+
+     const steps = [
+          { id: 1, title: "Upload Image", description: "Select the encrypted image" },
+          { id: 2, title: "Set Password", description: "Enter your password" },
+     ];
 
      const handleImageDrop = (acceptedFiles: File[]) => {
           setSelectedImage(acceptedFiles[0]);
-          setActiveStep(2);
-     };
-
-     const handleNext = () => {
-          if (activeStep < steps.length - 1) {
-               setActiveStep(activeStep + 1);
-          }
+          setActiveStep(1);
      };
 
      const handlePrevious = () => {
-          if (activeStep > 0) {
-               setActiveStep(activeStep - 1);
-          }
+          if (activeStep > 0) setActiveStep(activeStep - 1);
      };
 
-     const handleEncrypt = async () => {
-          if (!selectedFile || !selectedImage || !password) {
+     const handleDecrypt = async () => {
+          if (!selectedImage || !password) {
                toaster.create({
                     title: "Missing Requirements",
-                    description: "Please complete all steps",
-
+                    description: "Please select image and enter password",
                });
                return;
           }
 
           setLoading(true);
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          setLoading(false);
-          toaster.create({
-               title: "Success",
-               description: "File encrypted and hidden successfully!",
+          try {
+               const res = await handleRequestDecrypt({
+                    image: selectedImage,
+                    password: password,
+               });
 
-          });
+               if (res?.data.previewUrl) {
+                
+                    const fileUrl = `http://localhost:8080${res.data.previewUrl}`;
+
+                    // fetch file  blob
+                    const response = await fetch(fileUrl, { method: "GET" });
+                    if (!response.ok) throw new Error("Failed to fetch preview file");
+
+                    const blob = await response.blob();
+                    const objectUrl = URL.createObjectURL(blob);
+                    setPreviewUrl(objectUrl);
+                    setOpenPreview(true);
+
+                    toaster.create({
+                         title: "Success",
+                         description: "File decrypted successfully. Preview available.",
+                    });
+               }
+          } catch (err) {
+               console.error("Decrypt error:", err);
+               toaster.create({
+                    title: "Error",
+                    description: "Failed to decrypt file.",
+               });
+          } finally {
+               setLoading(false);
+          }
      };
 
      const renderStepContent = () => {
@@ -76,46 +104,26 @@ const DecryptPage = () => {
                case 0:
                     return (
                          <CardDropzone
-                              icon={FiFile}
-                              title="Drag & Drop File"
-                              onDrop={handleFileDrop}
-                              acceptedFiles={selectedFile?.name || "No file selected"}
-                         />
-                    );
-               case 1:
-                    return (
-                         <CardDropzone
                               icon={FiImage}
-                              title="Drag & Drop Image"
-                              // accept="image/*"
+                              title="Drag & Drop Encrypted Image"
                               onDrop={handleImageDrop}
                               acceptedFiles={selectedImage?.name || "No image selected"}
                          />
                     );
-               case 2:
+               case 1:
                     return (
                          <Card.Root>
                               <CardBody>
-                                   <Stack wordSpacing={4}>
+                                   <Stack gap={4}>
                                         <Flex align="center" gap={3}>
-                                             <Icon as={FiLock} boxSize={6} color="teal.500" />
+                                             <Icon as={FiLock} boxSize={6} color="blue.500" />
                                              <Heading size="md">Set Password</Heading>
                                         </Flex>
                                         <Input
-                                        //  type={showPassword ? "text" : "password"}
-                                        //  placeholder="Enter strong password"
-                                        //  value={password}
-                                        //  onChange={(e) => setPassword(e.target.value)}
-                                        //  rightElement={
-                                        //    <InputRightElement>
-                                        //      <IconButton
-                                        //        aria-label="Toggle password visibility"
-                                        //        icon={showPassword ? <FiEyeOff /> : <FiEye />}
-                                        //        onClick={() => setShowPassword(!showPassword)}
-                                        //        variant="ghost"
-                                        //      />
-                                        //    </InputRightElement>
-                                        //  }
+                                             type={showPassword ? "text" : "password"}
+                                             placeholder="Enter password"
+                                             value={password}
+                                             onChange={(e) => setPassword(e.target.value)}
                                         />
                                    </Stack>
                               </CardBody>
@@ -129,25 +137,27 @@ const DecryptPage = () => {
      return (
           <>
                <Sidebar />
-               <Box p={6} ml={{ base: 0, md: "240px" }}  >
-                       {/* Header */}
+               <Box p={6} ml={{ base: 0, md: "240px" }}>
+                    {/* Header */}
                     <Flex justifyContent="space-between" mb="8">
                          <Box>
-                              <Heading size="lg" mb="2">Decrypt Page</Heading>
+                              <Heading size="lg" mb="2">
+                                   Decrypt Page
+                              </Heading>
                          </Box>
-
                     </Flex>
-                    {/* Stepper Custom */}
+
+                    {/* Stepper */}
                     <Box divideY="2px">
-                         <Flex gap={4} mb={8} mt={"10"} >
+                         <Flex gap={4} mb={8} mt={"10"}>
                               {steps.map((step, index) => (
                                    <Box key={step.id} flex={1}>
-                                        <Flex justify={"center"} align="center" gap={2} >
+                                        <Flex justify={"center"} align="center" gap={2}>
                                              <Box
                                                   w={8}
                                                   h={8}
                                                   borderRadius="full"
-                                                  bg={activeStep >= index ? "teal.500" : "gray.200"}
+                                                  bg={activeStep >= index ? "blue.500" : "gray.200"}
                                                   color="white"
                                                   display="flex"
                                                   alignItems="center"
@@ -166,113 +176,106 @@ const DecryptPage = () => {
                                                   </Text>
                                              </Box>
                                         </Flex>
-                                        {/* {index < steps.length - 1 && (
-                 <Divider 
-                   borderColor={activeStep > index ? "teal.500" : "gray.200"}
-                   mt={2}
-                 />
-               )} */}
                                    </Box>
                               ))}
                          </Flex>
+
+                         {/* Main Content */}
                          <Box>
-                              {/* Konten Utama */}
                               {renderStepContent()}
 
                               {/* Navigation Buttons */}
                               <Flex mt={6} gap={4} justifyContent="flex-end">
-                                   <Button
-                                        variant="outline"
-                                        onClick={handlePrevious}
-                                   //    isDisabled={activeStep === 0}
-                                   >
+                                   <Button variant="outline" onClick={handlePrevious} disabled={activeStep === 0}>
                                         Previous
                                    </Button>
 
-                                   <Button
-                                        colorScheme="red"
-                                        // leftIcon={loading ? <Progress size="xs" isIndeterminate /> : <FiCheckCircle />}
-                                        onClick={handleEncrypt}
-                                        loading={loading}
-                                        disabled={
-                                             (activeStep === 0 && !selectedFile) ||
-                                             (activeStep === 1 && !selectedImage)
-                                        }
-                                   >
-                                        Encrypt & Hide
-                                   </Button>
-                                   <Button
-                                        variant="outline"
-                                        onClick={handleNext}
-                                        disabled={
-                                             (activeStep === 0 && !selectedFile) ||
-                                             (activeStep === 1 && !selectedImage) ||
-                                             (activeStep === 2)
-                                        }
-                                   >
-                                        Next
-                                   </Button>
-
+                                   {activeStep === 1 ? (
+                                        <Button colorScheme="blue" onClick={handleDecrypt} loading={loading}>
+                                             Decrypt
+                                        </Button>
+                                   ) : (
+                                        <Button
+                                             variant="outline"
+                                             onClick={() => setActiveStep(activeStep + 1)}
+                                             disabled={!selectedImage}
+                                        >
+                                             Next
+                                        </Button>
+                                   )}
                               </Flex>
-
                          </Box>
                     </Box>
-
                </Box>
-          </>
 
+               {/* Dialog Preview */}
+               <Dialog.Root open={openPreview} onOpenChange={(e) => setOpenPreview(e.open)}>
+                    <Dialog.Backdrop />
+                    <Dialog.Positioner>
+                         <Dialog.Content className="max-w-3xl">
+                              <Dialog.CloseTrigger />
+                              <Dialog.Header>
+                                   <Dialog.Title>Preview File</Dialog.Title>
+                              </Dialog.Header>
+
+                              <Dialog.Body>
+                                   {previewUrl && (
+                                        <iframe
+                                             src={previewUrl}
+                                             width="100%"
+                                             height="500px"
+                                             className="rounded-lg border"
+                                        />
+                                   )}
+
+                              </Dialog.Body>
+
+                         </Dialog.Content>
+                    </Dialog.Positioner>
+               </Dialog.Root>
+          </>
      );
 };
 
-// Komponen Dropzone
+// Dropzone component
 const CardDropzone: React.FC<CardDropzoneProps> = ({
      icon: IconComponent,
      title,
-     accept = {}, // Nilai default diubah ke objek kosong
+     accept = {},
      onDrop,
-     acceptedFiles
+     acceptedFiles,
 }) => {
      const { getRootProps, getInputProps, isDragActive } = useDropzone({
           onDrop: (files) => onDrop(files),
-          accept: accept, // Gunakan properti accept
-          multiple: false
+          accept: accept,
+          multiple: false,
      });
 
      return (
-          <>
-               <Sidebar />
-               <Box p="10">
-                    <Card.Root
-                         borderWidth="2px"
-                         borderRadius="lg"
-                         _hover={{ borderColor: "teal.500" }}
-                         transition="all 0.2s"
-                         bg={isDragActive ? "gray.50" : "white"}
-                         p={"20"}
-                    >
-                         <CardBody textAlign="center" {...getRootProps()}>
-                              <input {...getInputProps()} />
-                              <Box>
-                                   <Icon
-                                        as={IconComponent}
-                                        boxSize={12}
-                                        color="teal.500"
-                                        mb={4}
-                                   />
-                              </Box>
-                              <Text fontWeight="bold">{title}</Text>
-                              <Text color="gray.500">
-                                   {isDragActive ? "Release to drop" : "or click to select"}
-                              </Text>
-                              <Text mt={4} fontSize="sm" color="gray.600">
-                                   {acceptedFiles}
-                              </Text>
-                         </CardBody>
-                    </Card.Root>
-               </Box>
-
-          </>
-
+          <Box p="10">
+               <Card.Root
+                    borderWidth="2px"
+                    borderRadius="lg"
+                    _hover={{ borderColor: "blue.500" }}
+                    transition="all 0.2s"
+                    bg={isDragActive ? "gray.50" : "white"}
+                    p={"20"}
+               >
+                    <CardBody textAlign="center" {...getRootProps()}>
+                         <input {...getInputProps()} />
+                         <Box>
+                              <Icon as={IconComponent} boxSize={12} color="blue.500" mb={4} />
+                         </Box>
+                         <Text fontWeight="bold">{title}</Text>
+                         <Text color="gray.500">
+                              {isDragActive ? "Release to drop" : "or click to select"}
+                         </Text>
+                         <Text mt={4} fontSize="sm" color="gray.600">
+                              {acceptedFiles}
+                         </Text>
+                    </CardBody>
+               </Card.Root>
+          </Box>
      );
 };
 

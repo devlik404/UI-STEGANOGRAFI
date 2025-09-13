@@ -46,12 +46,12 @@ const Sidebar = () => {
       </Flex>
     </Link>
 
-    <Link href="/docs" color="#E0E0E0">
+    {/* <Link href="/docs" color="#E0E0E0">
       <Flex align="center" gap={3} py={2}>
         <Icon as={HiOutlineDocumentDuplicate} boxSize={5} color="#DDE6ED" />
         <Text>Document</Text>
       </Flex>
-    </Link>
+    </Link> */}
 
     <Link href="/folders" color="#E0E0E0">
       <Flex align="center" gap={3} py={2}>

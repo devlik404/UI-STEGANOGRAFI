@@ -7,12 +7,14 @@ import EncryptPage from "./pages/encryptPage";
 import DecryptPage from "./pages/decryptPage";
 import DocumentDirectory from "./pages/documentsPage";
 import FoldersPage from "./pages/foldersPage";
+import { Toaster } from "./components/ui/toaster";
 
 function App() {
 
   return (
-
-    <Routes>
+<>
+ <Toaster/>
+  <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/main" element={<Dashboard />} />
       <Route path="/decrypt" element={<DecryptPage />} />
@@ -20,6 +22,8 @@ function App() {
       <Route path="/docs" element={<DocumentDirectory />} />
       <Route path="/folders" element={<FoldersPage />} />
     </Routes>
+</>
+  
 
   );
 }

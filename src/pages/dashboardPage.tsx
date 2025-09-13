@@ -3,8 +3,32 @@ import { FiFile, FiLock, FiUnlock } from "react-icons/fi";
 import { FaRegFileArchive } from "react-icons/fa";
 import Sidebar from "@/components/sidebar";
 import { Link } from "react-router-dom";
+import { handleGetEncrypt } from "@/hooks/getEncrypt";
+import { IEncryptGet } from "@/utils/interface";
+import { useEffect, useState } from "react";
 
 const Dashboard = () => {
+    const [countStego, setCountStego] = useState<IEncryptGet>({
+    count: 0,
+    countDecrypt: 0,
+  });
+
+    const fetchData = async () => {
+      try {
+        const { countEncrypt } = await handleGetEncrypt();
+        setCountStego(countEncrypt);
+      } catch (err) {
+        console.error("Failed to fetch count:", err);
+      }
+    };
+
+
+    
+  useEffect(() => {
+    
+    fetchData();
+  }, []);
+
 
 
      return (
@@ -70,7 +94,7 @@ const Dashboard = () => {
                     <Card.Root boxShadow="sm" mb="6">
                          <CardBody>
                               <Heading size="md" mb="4">Total Asset Files</Heading>
-
+  <Heading size="lg">{(countStego.count + countStego.countDecrypt).toString()}</Heading>
                          </CardBody>
                     </Card.Root>
 
@@ -81,7 +105,7 @@ const Dashboard = () => {
                                    <Flex justify="space-between" align="center">
                                         <Box>
                                              <Text color="gray.500">Total Encrypted Files</Text>
-                                             <Heading size="lg">15</Heading>
+                                             <Heading size="lg">{countStego.count.toString()}</Heading>
                                         </Box>
                                         <Progress.Root variant="outline">
                                              <Progress.Track>
@@ -97,7 +121,7 @@ const Dashboard = () => {
                                    <Flex justify="space-between" align="center">
                                         <Box>
                                              <Text color="gray.500">Total Decrypted Files</Text>
-                                             <Heading size="lg">8</Heading>
+                                             <Heading size="lg">{countStego.countDecrypt.toString()}</Heading>
                                         </Box>
                                         <Progress.Root variant="subtle">
                                              <Progress.Track>

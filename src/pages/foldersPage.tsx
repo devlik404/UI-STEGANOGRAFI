@@ -5,90 +5,97 @@ import {
      Image,
      Table,
      Flex,
-     Heading,
+     Button,
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SelectionToolbar } from "@/components/atom/selectionToolbar";
+import { handleGetEncrypt } from "@/hooks/getEncrypt";
 
-const assets = [
-     {
-          id: 1,
-          name: "spx4dk5fku9m2ozsoo...",
-          size: "33.07 KB",
-          originalName: "test1",
-          uploadDate: "2025-06-13 16:06:00.423694",
-          image: "https://res.cloudinary.com/dmqsfpgqj/image/upload/v1749805557/vmj03sciehvkwhdsft1z.png"
-     },
-     {
-          id: 2,
-          name: "yl0jbdd0rlzsyagp4i54",
-          size: "58.58 KB",
-          originalName: "tes2",
-          uploadDate: "2025-06-13 16:06:00.423694",
-          image: "https://res.cloudinary.com/dmqsfpgqj/image/upload/v1752740314/stegano_images/yl0jbdd0rlzsyagp4i54.png"
-     },
-     {
-          id: 3,
-          name: "hncbohq5kanfu768jj11",
-          size: "33.07 KB",
-          originalName: "test4",
-          uploadDate: "2025-06-13 16:06:00.423694",
-          image: "https://res.cloudinary.com/dmqsfpgqj/image/upload/v1749807201/stegano_images/hncbohq5kanfu768jj11.png"
-     },
-     {
-          id: 3,
-          name: "hncbohq5kanfu768jj11",
-          size: "33.07 KB",
-          originalName: "test33",
-          uploadDate: "2025-06-13 16:06:00.423694",
-          image: "https://res.cloudinary.com/dmqsfpgqj/image/upload/v1749807201/stegano_images/hncbohq5kanfu768jj11.png"
-     },
-];
+
 
 const FolderPages = () => {
+     const [assets, setAssets] = useState<any[]>([]);
      const [selection, setSelection] = useState<number[]>([]);
+     const [currentPage, setCurrentPage] = useState(1);
+     const itemsPerPage = 5;
+
      const indeterminate = selection.length > 0 && selection.length < assets.length;
      const selectedAssets = assets.filter((a) => selection.includes(a.id));
-     const selectedNames = selectedAssets.map((a) => a.name);
+     const selectedNames = selectedAssets.map((a) => a.fileName || a.name);
+     console.log(selectedAssets);
+
+
+     useEffect(() => {
+          const handleGetFiles = async () => {
+               try {
+                    const res = await handleGetEncrypt();
+                    const mapped = res.data.results.map((item: any) => ({
+                         id: item.id,
+                         name: item.fileName,
+                         size: `${(item.fileSize / 1024).toFixed(2)} KB`,
+                         originalName: item.fileName,
+                         uploadDate: item.uploadDate,
+                         image: item.url,
+                    }));
+                    setAssets(mapped);
+               } catch (err) {
+                    console.error(err);
+               }
+          };
+          handleGetFiles();
+     }, []);
+
+     // Pagination
+     const totalPages = Math.ceil(assets.length / itemsPerPage);
+     const paginatedAssets = assets.slice(
+          (currentPage - 1) * itemsPerPage,
+          currentPage * itemsPerPage
+     );
 
      return (
           <>
                <Sidebar />
-               {selectedNames.length > 0 && (
-                    <Box ml={{ base: 0, md: "240px" }} p={"1"} >
+               {selectedAssets.length > 0 && (
+                    <Box ml={{ base: 0, md: "240px" }} p={"1"}>
                          <SelectionToolbar
-                              selectedNames={selectedNames}
+                              selected={selectedAssets}
                               onClearSelection={() => setSelection([])}
+                              onRefresh={async () => {
+                                   const res = await handleGetEncrypt();
+                                   const mapped = res.data.results.map((item: any) => ({
+                                        id: item.id,
+                                        name: item.fileName,
+                                        size: `${(item.fileSize / 1024).toFixed(2)} KB`,
+                                        originalName: item.fileName,
+                                        uploadDate: item.uploadDate,
+                                        image: item.url,
+                                   }));
+                                   setAssets(mapped);
+                                   setSelection([]); 
+                              }}
                          />
                     </Box>
                )}
 
                <Box ml={{ base: 0, md: "240px" }} p={6}>
-   {/* Header */}
                     <Flex justifyContent="space-between" mb="8">
                          <Box>
-                              <Heading size="lg" mb="2">Asseets Page</Heading>
+                              <Text fontSize="2xl" fontWeight="bold">Assets Page</Text>
                          </Box>
-
                     </Flex>
                     <Text fontSize="xl" fontWeight="bold" mb={4}>
                          Showing {assets.length} assets
                     </Text>
 
-                    <Table.Root
-                         variant={"outline"}
-                         colorPalette={"blue"}
-                    >
+                    <Table.Root variant={"outline"} colorPalette={"blue"}>
                          <Table.Header>
                               <Table.Row>
                                    <Table.ColumnHeader>
                                         <Checkbox
                                              checked={indeterminate ? "indeterminate" : selection.length === assets.length}
                                              onCheckedChange={(e) =>
-                                                  setSelection(
-                                                       e.checked ? assets.map((a) => a.id) : []
-                                                  )
+                                                  setSelection(e.checked ? assets.map((a) => a.id) : [])
                                              }
                                              aria-label="Select all rows"
                                         />
@@ -102,21 +109,18 @@ const FolderPages = () => {
                          </Table.Header>
 
                          <Table.Body>
-                              {assets.map((asset) => (
+                              {paginatedAssets.map((asset) => (
                                    <Table.Row
                                         key={asset.id}
                                         data-selected={selection.includes(asset.id) ? "" : undefined}
                                    >
                                         <Table.Cell>
-
                                              <Checkbox
                                                   variant={"outline"}
                                                   checked={selection.includes(asset.id)}
                                                   onCheckedChange={(e) =>
                                                        setSelection((prev) =>
-                                                            e.checked
-                                                                 ? [...prev, asset.id]
-                                                                 : prev.filter((id) => id !== asset.id)
+                                                            e.checked ? [...prev, asset.id] : prev.filter((id) => id !== asset.id)
                                                        )
                                                   }
                                                   aria-label={`Select ${asset.name}`}
@@ -139,6 +143,27 @@ const FolderPages = () => {
                               ))}
                          </Table.Body>
                     </Table.Root>
+
+                    {/* Pagination Controls */}
+                    {totalPages > 1 && (
+                         <Flex mt={4} justifyContent="center" gap={2}>
+                              <Button
+                                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                                   disabled={currentPage === 1}
+                              >
+                                   Previous
+                              </Button>
+                              <Text alignSelf="center">
+                                   Page {currentPage} of {totalPages}
+                              </Text>
+                              <Button
+                                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                                   disabled={currentPage === totalPages}
+                              >
+                                   Next
+                              </Button>
+                         </Flex>
+                    )}
                </Box>
           </>
      );
