@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import process$1 from "node:process";
 import fs from "node:fs";
+import { spawn } from "node:child_process";
 function pathExistsSync(path2) {
   try {
     fs.accessSync(path2);
@@ -11034,6 +11035,7 @@ async function download(window_, url, options) {
 }
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 let win = null;
+let backendProcess = null;
 function createWindow() {
   win = new BrowserWindow({
     webPreferences: {
@@ -11049,8 +11051,24 @@ function createWindow() {
   }
 }
 app.whenReady().then(() => {
+  var _a, _b;
+  const devJarPath = path.join(__dirname, "resources", "backend", "steganoapp-0.0.1-SNAPSHOT.jar");
+  const prodJarPath = path.join(process.resourcesPath, "backend", "steganoapp-0.0.1-SNAPSHOT.jar");
+  const jarPath = app.isPackaged ? prodJarPath : devJarPath;
+  backendProcess = spawn("java", ["-jar", jarPath]);
+  console.log("Running JAR at:", jarPath);
+  console.log("Running JAR dev at:", devJarPath);
+  (_a = backendProcess.stdout) == null ? void 0 : _a.on("data", (data) => {
+    console.log(`Spring Boot: ${data}`);
+  });
+  (_b = backendProcess.stderr) == null ? void 0 : _b.on("data", (data) => {
+    console.error(`Spring Boot Error: ${data}`);
+  });
+  backendProcess.on("close", (code) => {
+    console.log(`Spring Boot stopped with code ${code}`);
+  });
   createWindow();
-  ipcMain.on("download-file", async (event, url) => {
+  ipcMain.on("download-file", async (_, url) => {
     const focusedWin = BrowserWindow.getFocusedWindow();
     if (!focusedWin) return;
     try {
@@ -11058,11 +11076,12 @@ app.whenReady().then(() => {
         directory: app.getPath("downloads"),
         saveAs: true
       });
-      console.log("✅ File berhasil didownload:", dl.getSavePath());
       focusedWin.webContents.send("download-done", dl.getSavePath());
     } catch (err) {
-      console.error("❌ Download gagal:", err);
       focusedWin.webContents.send("download-failed", String(err));
     }
   });
+});
+app.on("quit", () => {
+  if (backendProcess) backendProcess.kill();
 });

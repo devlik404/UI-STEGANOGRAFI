@@ -9,6 +9,27 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
+  "build": {
+    "appId": "id.personal.steganografi",
+    "productName": "Steganografi",
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*"
+    ],
+    "extraResources": [
+    {
+      "from": "resources/backend/",
+      "to": "backend",
+      "filter": ["*.jar"]
+    }
+  ],
+    "directories": {
+      "buildResources": "build"
+    },
+    "win": {
+      "target": "nsis"
+    }
+  },
   "dependencies": {
     "@chakra-ui/react": "^3.13.0",
     "@emotion/react": "^11.14.0",

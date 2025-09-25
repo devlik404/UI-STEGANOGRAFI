@@ -14,12 +14,12 @@ import { FaLaptopCode } from 'react-icons/fa';
 import { FcGoogle } from 'react-icons/fc';
 import { LuLock } from 'react-icons/lu';
 import { MdOutlineMailOutline } from 'react-icons/md';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 
 
 export default function LandingPage() {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   return (
     <Flex h="100vh" w="100%">
@@ -63,7 +63,7 @@ export default function LandingPage() {
           CRYPTO <span style={{ color: "#3A86FF" }}>STEGO</span>
         </Heading>
         <Text color="gray.500" mb={8}>
-          You can sign in or register from the button below. Please keep in mind how our system works.
+         You may enter. Please observe how our system works. To register, please contact the IT team.
         </Text>
         <Box width={"100%"}>
 
@@ -85,17 +85,17 @@ export default function LandingPage() {
                 w="100%"
               >
 
-                Sign in your Account
+                Login your Account
               </Button>
             </Link>
-            <Button
+            {/* <Button
               variant="outline"
               size="lg"
               w="100%"
 
             >
               <FcGoogle /> Sign in with Google
-            </Button>
+            </Button> */}
           </Stack>
         </Box>
 

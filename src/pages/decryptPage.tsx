@@ -31,7 +31,7 @@ interface CardDropzoneProps {
 const DecryptPage = () => {
      const [selectedImage, setSelectedImage] = useState<File | null>(null);
      const [password, setPassword] = useState("");
-     const [showPassword, setShowPassword] = useState(false);
+     // const [showPassword, setShowPassword] = useState(false);
      const [activeStep, setActiveStep] = useState(0);
      const [loading, setLoading] = useState(false);
 
@@ -71,7 +71,7 @@ const DecryptPage = () => {
                });
 
                if (res?.data.previewUrl) {
-                
+
                     const fileUrl = `http://localhost:8080${res.data.previewUrl}`;
 
                     // fetch file  blob
@@ -120,10 +120,13 @@ const DecryptPage = () => {
                                              <Heading size="md">Set Password</Heading>
                                         </Flex>
                                         <Input
-                                             type={showPassword ? "text" : "password"}
-                                             placeholder="Enter password"
+                                             // type={showPassword ? "text" : "password"}
+                                             type="password"
+                                             placeholder="Enter strong password"
                                              value={password}
+                                             name="password"
                                              onChange={(e) => setPassword(e.target.value)}
+
                                         />
                                    </Stack>
                               </CardBody>
@@ -209,8 +212,19 @@ const DecryptPage = () => {
                </Box>
 
                {/* Dialog Preview */}
-               <Dialog.Root open={openPreview} onOpenChange={(e) => setOpenPreview(e.open)}>
-                    <Dialog.Backdrop />
+               <Dialog.Root open={openPreview} onOpenChange={(e) => {
+                    setOpenPreview(e.open);
+                    if (!e.open && previewUrl) {
+                         toaster.create({
+                              title: "Success",
+                              description: "File closed/downloaded successfully.",
+                         });
+                    }
+                    setActiveStep(0);
+                    setSelectedImage(null);
+                    setPassword("");
+                    setPreviewUrl(null);
+               }}>   <Dialog.Backdrop />
                     <Dialog.Positioner>
                          <Dialog.Content className="max-w-3xl">
                               <Dialog.CloseTrigger />

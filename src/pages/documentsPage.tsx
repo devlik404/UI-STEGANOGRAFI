@@ -1,16 +1,10 @@
 import Sidebar from "@/components/sidebar";
-import { Box, Button, createListCollection, Flex, For, Heading, Icon, Input, Portal, Select, Table } from "@chakra-ui/react";
+import { Box, Button, createListCollection, Flex, Heading, Icon, Input, Portal, Select, Table } from "@chakra-ui/react";
 import { useState } from "react";
 
-import { FiUpload, FiFileText, FiFilter } from "react-icons/fi";
+import { FiFileText } from "react-icons/fi";
 
-const documents = [
-     { name: "Free Textbooks as the New Advertising Medium.pdf", type: "Announcement", department: "Engineering", date: "6/14/16", icon: FiFileText },
-     { name: "Employee Handbook.doc", type: "Form", department: "Company", date: "6/14/16", icon: FiFileText },
-     { name: "Digital Media 2014.ppt", type: "Template", department: "Company", date: "6/13/16", icon: FiFileText },
-     { name: "Brand Advertising Does Extreme.doc", type: "Contract", department: "Marketing", date: "6/13/16", icon: FiFileText },
-     { name: "Advertising Shifting to the Web.xls", type: "Event", department: "Sales", date: "6/12/16", icon: FiFileText },
-];
+
 const items = [
      { id: 1, name: "Laptop", type: "Announcement", date: "6/14/16", icon: FiFileText },
      { id: 2, name: "Coffee Maker", type: "Form", date: "6/14/16", icon: FiFileText },
@@ -21,8 +15,8 @@ const items = [
 
 export default function DocumentDirectory() {
      const [search, setSearch] = useState("");
-     const [filterType, setFilterType] = useState("All");
-     const [filterDepartment, setFilterDepartment] = useState("All");
+     // const [filterType, setFilterType] = useState("All");
+     // const [filterDepartment, setFilterDepartment] = useState("All");
      const frameworks = createListCollection({
           items: [
                { label: "React.js", value: "react" },

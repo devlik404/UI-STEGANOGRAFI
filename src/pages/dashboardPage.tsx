@@ -54,7 +54,7 @@ const Dashboard = () => {
                                         </Flex>
                                         <Text color="gray.500">Secure your files with AES encryption and hide them in images.</Text>
                                         <Button variant="outline" colorScheme="teal">
-                                             <Link to="/decrypt" >
+                                             <Link to="/encrypt" >
                                                   <Box display={"flex"} gap={2}>
                                                        <FiFile />
                                                        <Text>
@@ -76,7 +76,7 @@ const Dashboard = () => {
                                         </Flex>
                                         <Text color="gray.500">Extract and decrypt files from steganographic images.</Text>
                                         <Button variant="outline" colorScheme="teal" >
-                                             <Link to="/encrypt" >
+                                             <Link to="/decrypt" >
                                                   <Box display={"flex"} gap={2}>
                                                        <FaRegFileArchive />
                                                        <Text>
@@ -93,7 +93,7 @@ const Dashboard = () => {
                     {/* Recent Files */}
                     <Card.Root boxShadow="sm" mb="6">
                          <CardBody>
-                              <Heading size="md" mb="4">Total Asset Files</Heading>
+                              <Heading size="md" mb="4">Total Files</Heading>
   <Heading size="lg">{(countStego.count + countStego.countDecrypt).toString()}</Heading>
                          </CardBody>
                     </Card.Root>

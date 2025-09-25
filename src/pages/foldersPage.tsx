@@ -22,9 +22,7 @@ const FolderPages = () => {
 
      const indeterminate = selection.length > 0 && selection.length < assets.length;
      const selectedAssets = assets.filter((a) => selection.includes(a.id));
-     const selectedNames = selectedAssets.map((a) => a.fileName || a.name);
-     console.log(selectedAssets);
-
+ 
 
      useEffect(() => {
           const handleGetFiles = async () => {

@@ -160,24 +160,26 @@ const EncryptPage = () => {
                case 3:
                     return (
                          <Card.Root mt="4">
-                              <CardBody>
+                              <CardBody bg={"blue"} borderRadius={"md"} border={"1px"} borderColor={"blue.500"} color={"white"}>
 
-                                   <Flex align="center" gap={4}>
+                                   <Flex align="center" gap={4} >
                                         {/* Icon file zip */}
                                         <Box boxSize={12}>
-                                             <Icon as={BsFileEarmarkZipFill} boxSize={12} color="blue.600" />
+                                             <Icon as={BsFileEarmarkZipFill} boxSize={12} color="white" />
                                         </Box>
 
                                         {/* File info */}
-                                        <Stack gap={1} flex="1" minW={0}>
-                                             <Text fontWeight="bold" fontSize="sm" className="truncate">
-                                                  {res.url}
+                                        <Stack gap={1} flex="1" minW={0} >
+                                             <Text fontWeight="bold" fontSize="md" className="truncate">
+                                                  {res.url ? "Download your file": "No file available"}
                                              </Text>
 
                                         </Stack>
                                         <Button
-                                             variant="ghost"
+                                             variant="outline"
                                              borderRadius="full"
+                                             color={"white"}
+                                             bg={"blue.500"}
                                              p={2}
                                              minW="auto"
                                              onClick={handleDownload}

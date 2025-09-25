@@ -1,12 +1,13 @@
 import { handleDeleted } from "@/hooks/deletedFiles";
 import { Box, Text, Flex, IconButton } from "@chakra-ui/react";
 import { FaTrash, FaShareAlt, FaDownload } from "react-icons/fa";
-import { toaster } from "@/components/ui/toaster"
+import { toaster } from "@/components/ui/toaster";
+import { useEffect } from "react";
 
 interface SelectionToolbarProps {
-  selected: any[]; 
+  selected: any[];
   onClearSelection: () => void;
-   onRefresh?: () => void; 
+  onRefresh?: () => void;
 }
 
 export const SelectionToolbar = ({
@@ -14,26 +15,103 @@ export const SelectionToolbar = ({
   onClearSelection,
   onRefresh,
 }: SelectionToolbarProps) => {
-  if (selected.length === 0) return null;
 
-  const handleDelete = async () => {
-    try {
-   
-      const ids = selected.map((a) => a.id);
-      await handleDeleted(Number(ids));
-      if (onRefresh) {
-       onRefresh();
-        toaster.success({
-          title: "Deleted successful",
-          description: "File deleted successfully to the server",
-        })
-    } else {
-      onClearSelection();
-    }
-    } catch (err) {
-      console.error(err);
+    if (selected.length === 0) return null;
+
+  // === HANDLE DOWNLOAD FILE ===
+
+  const handleDownload = () => {
+
+    for (const file of selected) {
+      if (file.image) {
+        window.electron.downloadFile(file.image);
+      }
     }
   };
+
+  useEffect(() => {
+    const removeDone = window.electron.onDownloadDone((path) => {
+      toaster.success({
+        title: "Success",
+        description: "File saved successfully: " + path,
+      });
+        onClearSelection(); 
+    });
+
+    const removeFailed = window.electron.onDownloadFailed((err) => {
+      toaster.error({
+        title: "Failed",
+        description: "Download failed: " + err,
+      });
+        onClearSelection(); 
+    });
+
+    return () => {
+      removeDone();
+      removeFailed();
+    };
+  }, [onClearSelection]);
+
+
+  const handleDelete = async () => {
+  try {
+    for (const file of selected) {
+      await handleDeleted(file.id);
+    }
+
+    if (onRefresh) {
+      onRefresh();
+    }
+    toaster.success({
+      title: "Deleted successful",
+      description: "File(s) deleted successfully on server",
+    });
+    onClearSelection();
+  } catch (err) {
+    console.error(err);
+    toaster.error({
+      title: "Delete failed",
+      description: "Unable to delete file(s).",
+    });
+  }
+};
+const handleShare = async () => {
+  if (!selected || selected.length === 0) return;
+
+  try {
+    // Ambil semua url file yang dipilih
+    const links = selected.map((file) => file.image).filter(Boolean);
+
+    if (links.length === 0) {
+      toaster.error({
+        title: "No link",
+        description: "File(s) have no shareable link.",
+      });
+      return;
+    }
+
+    // Gabung link jadi teks
+    const shareText = links.join("\n");
+
+    // Copy ke clipboard
+    await navigator.clipboard.writeText(shareText);
+
+    toaster.success({
+      title: "Link copied",
+      description: "File link(s) copied to clipboard.",
+    });
+
+    onClearSelection(); // ✅ clear setelah share
+  } catch (err) {
+    console.error(err);
+    toaster.error({
+      title: "Share failed",
+      description: "Could not copy link(s).",
+    });
+    onClearSelection();
+  }
+};
+
 
   return (
     <Box
@@ -58,10 +136,19 @@ export const SelectionToolbar = ({
           >
             <FaTrash />
           </IconButton>
-          <IconButton aria-label="Share" bg={"transparent"}>
-            <FaShareAlt />
-          </IconButton>
-          <IconButton aria-label="Download" bg={"transparent"}>
+          <IconButton
+  aria-label="Share"
+  bg={"transparent"}
+  onClick={handleShare}
+>
+  <FaShareAlt />
+</IconButton>
+
+          <IconButton
+            aria-label="Download"
+            bg={"transparent"}
+            onClick={handleDownload}
+          >
             <FaDownload />
           </IconButton>
         </Flex>

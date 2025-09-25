@@ -1,6 +1,5 @@
 import { Box, Flex, Text, Link, Icon } from "@chakra-ui/react";
 import { RiHome2Line } from "react-icons/ri";
-import { HiOutlineDocumentDuplicate } from "react-icons/hi";
 import { BiLockAlt, BiLockOpenAlt } from "react-icons/bi";
 import { TbFolderSearch } from "react-icons/tb";
 

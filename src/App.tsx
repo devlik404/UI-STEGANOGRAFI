@@ -1,6 +1,6 @@
 import "./App.css";
 
-import { Routes, Route, BrowserRouter } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/landingPage";
 import Dashboard from "./pages/dashboardPage";
 import EncryptPage from "./pages/encryptPage";
