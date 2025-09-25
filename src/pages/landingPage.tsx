@@ -11,7 +11,6 @@ import {
   InputGroup,
 } from '@chakra-ui/react'
 import { FaLaptopCode } from 'react-icons/fa';
-import { FcGoogle } from 'react-icons/fc';
 import { LuLock } from 'react-icons/lu';
 import { MdOutlineMailOutline } from 'react-icons/md';
 import { Link } from 'react-router-dom';
